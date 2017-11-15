@@ -234,6 +234,7 @@ public class NetTCPSSL : NetTCP {
 			SSL_CTX_ctrl(sslCtx, SSL_CTRL_SET_ECDH_AUTO, 1, nil)
 		#endif
 		SSL_CTX_ctrl(sslCtx, SSL_CTRL_MODE, SSL_MODE_AUTO_RETRY, nil)
+		#if os(Linux)
 		//SSL_CTX_ctrl(sslCtx, SSL_CTRL_OPTIONS, SSL_OP_ALL, nil)
 		// SSL_OP_ALL is defined as 0x80000BFFL in opensll/ssl.h.  Swift interprets
 		//   this as a UInt but the prototype for SSL_CTX_ctrl uses "long" which
@@ -243,6 +244,9 @@ public class NetTCPSSL : NetTCP {
 		//   pattern as 0x80000BFF: -2147480577.  (jasonm)
 		//SSL_CTX_ctrl(sslCtx, SSL_CTRL_OPTIONS, -2147480577, nil)
 		SSL_CTX_ctrl(sslCtx, SSL_CTRL_OPTIONS, Int(bitPattern: SSL_OP_ALL), nil)
+		#else
+		SSL_CTX_ctrl(sslCtx, SSL_CTRL_OPTIONS, SSL_OP_ALL, nil)
+		#endif
 		return sslCtx
 	}
 	
