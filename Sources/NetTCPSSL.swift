@@ -234,18 +234,19 @@ public class NetTCPSSL : NetTCP {
 			SSL_CTX_ctrl(sslCtx, SSL_CTRL_SET_ECDH_AUTO, 1, nil)
 		#endif
 		SSL_CTX_ctrl(sslCtx, SSL_CTRL_MODE, SSL_MODE_AUTO_RETRY, nil)
-		#if os(Linux)
-		//SSL_CTX_ctrl(sslCtx, SSL_CTRL_OPTIONS, SSL_OP_ALL, nil)
-		// SSL_OP_ALL is defined as 0x80000BFFL in opensll/ssl.h.  Swift interprets
-		//   this as a UInt but the prototype for SSL_CTX_ctrl uses "long" which
-		//   Swift interprets as Int. Swift won't convert the value because the top
-		//   bit is set and it overflows an Int.  As a temp workaround, I have
-		//   manually inserted the signed decimal value that gives the same bit
-		//   pattern as 0x80000BFF: -2147480577.  (jasonm)
-		//SSL_CTX_ctrl(sslCtx, SSL_CTRL_OPTIONS, -2147480577, nil)
-		SSL_CTX_ctrl(sslCtx, SSL_CTRL_OPTIONS, Int(bitPattern: SSL_OP_ALL), nil)
+		#if (arch(arm) || arch(i386))
+			//SSL_CTX_ctrl(sslCtx, SSL_CTRL_OPTIONS, SSL_OP_ALL, nil)
+			/* SSL_OP_ALL is defined as 0x80000BFFL in opensll/ssl.h.  On 32-bit
+			   architectures, Swift interprets this as a UInt but the prototype
+			   for SSL_CTX_ctrl uses "long" which Swift interprets as Int. Swift
+			   won't convert the value because the top bit is set and it
+			   overflows a 32-bit Int. Therefore, on 32-bit systems, use the
+			   bitPattern operator to get an Int with the same bits set as in
+			   the original UInt.
+			*/
+			SSL_CTX_ctrl(sslCtx, SSL_CTRL_OPTIONS, Int(bitPattern: SSL_OP_ALL), nil)
 		#else
-		SSL_CTX_ctrl(sslCtx, SSL_CTRL_OPTIONS, SSL_OP_ALL, nil)
+			SSL_CTX_ctrl(sslCtx, SSL_CTRL_OPTIONS, SSL_OP_ALL, nil)
 		#endif
 		return sslCtx
 	}
